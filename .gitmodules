@@ -1,0 +1,3 @@
+[submodule "edge-detector"]
+	path = edge-detector
+	url = https://github.com/ralbertazzi/jigsaw-puzzle-solver.git
