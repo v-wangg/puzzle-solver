@@ -15,24 +15,24 @@ _corner_indexes = [(0, 1), (1, 3), (3, 2), (0, 2)]
 
 def compute_barycentre(thresh, value=0):
     """
-	Given the segmented puzzle piece, compute its barycentre.
-	"""
+    Given the segmented puzzle piece, compute its barycentre.
+    """
     idx_shape = np.where(thresh == value)
     return [int(np.round(coords.mean())) for coords in idx_shape]
 
 def compute_minmax_xy(thresh):
     """
-	Given the thresholded image, compute the minimum and maximum x and y 
-	coordinates of the segmented puzzle piece.
-	"""
+    Given the thresholded image, compute the minimum and maximum x and y 
+    coordinates of the segmented puzzle piece.
+    """
     idx_shape = np.where(thresh == 0)
     return [np.array([coords.min(), coords.max()]) for coords in idx_shape]
 
 
 def segment_piece(image, bin_threshold=128):
-	"""
-	Apply segmentation of the image by simple binarization
-	"""
+    """
+    Apply segmentation of the image by simple binarization
+    """
     return cv2.threshold(image, bin_threshold, 255, cv2.THRESH_BINARY)[1]
 
     
@@ -85,7 +85,7 @@ def prune_lines_by_voting(lines, angle_threshold=5):
 
     # print accumulator
     best_angle = np.argmax(accumulator)
-    print 'best angle', best_angle
+    print('best angle', best_angle)
     return lines[np.abs(angles - best_angle) <= angle_threshold]
 
 
@@ -122,7 +122,7 @@ def compute_mean_line(lines, debug=False):
     if debug:
         print(correction_factor)
         print(weights)
-        print
+        print()
     
     return np.array([m_rho, m_theta])
 
@@ -151,8 +151,10 @@ def line_intersection(line1, line2):
     
     return x0, y0
 
-def compute_intersections(mean_lines, (h, w)):
-    
+def compute_intersections(mean_lines, h_w):
+
+    h, w = h_w
+
     intersections = []
 
     for i, line_i in enumerate(mean_lines):
@@ -166,12 +168,14 @@ def compute_intersections(mean_lines, (h, w)):
     return np.array(intersections)
 
 
-def corner_detection(edges, intersections, (xb, yb), rect_size=50, show=False):
+def corner_detection(edges, intersections, xb_yb, rect_size=50, show=False):
 
     # Find corners by taking the highest distant point from a 45 degrees inclined line
     # inside a squared ROI centerd on the previously found intersection point.
     # Inclination of the line depends on which corner we are looking for, and is
     # computed based on the position of the barycenter of the piece.
+
+    xb, yb = xb_yb
 
     corners = []
 
@@ -282,7 +286,7 @@ def shape_classification(edges, line_params, d_threshold=500, n_hs=10):
     return class_image
 
 
-def compute_inout(class_image, line_params, (xb, yb), d_threshold=10):
+def compute_inout(class_image, line_params, xb_yb, d_threshold=10):
     
     # Given the full class image, the line parameters and the coordinates of the barycenter,
     # compute for each side if the curve of the piece goes inside (in) or outside (out).
@@ -292,6 +296,8 @@ def compute_inout(class_image, line_params, (xb, yb), d_threshold=10):
     # To let the points of the curve to contribute more to the mean point calculation, only the
     # signed distances that are greater than a threshold are used.
     
+    xb, yb = xb_yb
+
     inout = []
 
     for line_param, cl in zip(line_params, (1, 2, 3, 4)):
@@ -432,10 +438,10 @@ def cluster_lines(lines):
         
 def get_corners(dst, neighborhood_size=5, score_threshold=0.3, minmax_threshold=100):
     
-	"""
-	Given the input Harris image (where in each pixel the Harris function is computed),
-	extract discrete corners
-	"""
+    """
+    Given the input Harris image (where in each pixel the Harris function is computed),
+    extract discrete corners
+    """
     data = dst.copy()
     data[data < score_threshold*dst.max()] = 0.
 
@@ -454,25 +460,25 @@ def get_corners(dst, neighborhood_size=5, score_threshold=0.3, minmax_threshold=
 
 def get_best_fitting_rect_coords(xy, d_threshold=30, perp_angle_thresh=20, verbose=0):
 
-	"""
-	Since we expect the 4 puzzle corners to be the corners of a rectangle, here we take
-	all detected Harris corners and we find the best corresponding rectangle.
-	We perform a recursive search with max depth = 2:
-	- At depth 0 we take one of the input point as the first corner of the rectangle
-	- At depth 1 we select another input point (with distance from the first point greater
-		then d_threshold) as the second point
-	- At depth 2 and 3 we take the other points. However, the lines 01-12 and 12-23 should be
-		as perpendicular as possible. If the angle formed by these lines is too much far from the
-		right angle, we discard the choice.
-	- At depth 3, if a valid candidate (4 points that form an almost perpendicular rectangle) is found,
-		we add it to the list of candidates.
-		
-	Given a list of candidate rectangles, we then select the best one by taking the candidate that maximizes
-	the function: area * Gaussian(rectangularness)
-	- area: it is the area of the candidate shape. We expect that the puzzle corners will form the maximum area
-	- rectangularness: it is the mse of the candidate shape's angles compared to a 90 degree angles. The smaller
-						this value, the most the shape is similar toa rectangle.
-	"""
+    """
+    Since we expect the 4 puzzle corners to be the corners of a rectangle, here we take
+    all detected Harris corners and we find the best corresponding rectangle.
+    We perform a recursive search with max depth = 2:
+    - At depth 0 we take one of the input point as the first corner of the rectangle
+    - At depth 1 we select another input point (with distance from the first point greater
+        then d_threshold) as the second point
+    - At depth 2 and 3 we take the other points. However, the lines 01-12 and 12-23 should be
+        as perpendicular as possible. If the angle formed by these lines is too much far from the
+        right angle, we discard the choice.
+    - At depth 3, if a valid candidate (4 points that form an almost perpendicular rectangle) is found,
+        we add it to the list of candidates.
+        
+    Given a list of candidate rectangles, we then select the best one by taking the candidate that maximizes
+    the function: area * Gaussian(rectangularness)
+    - area: it is the area of the candidate shape. We expect that the puzzle corners will form the maximum area
+    - rectangularness: it is the mse of the candidate shape's angles compared to a 90 degree angles. The smaller
+                        this value, the most the shape is similar toa rectangle.
+    """
     N = len(xy)
 
     distances = scipy.spatial.distance.cdist(xy, xy)
@@ -508,13 +514,13 @@ def get_best_fitting_rect_coords(xy, d_threshold=30, perp_angle_thresh=20, verbo
             right_points_idx = np.nonzero(np.logical_and(xy[:, 0] > curr_point[0], distances[idx] > 0))[0]
             
             if verbose >= 2:
-                print 'point', idx, curr_point
+                print('point', idx, curr_point)
                 
             for right_point_idx in right_points_idx:
                 search_for_possible_rectangle(right_point_idx, [idx])
 
             if verbose >= 2:
-                print
+                print()
                 
             return
 
@@ -527,7 +533,7 @@ def get_best_fitting_rect_coords(xy, d_threshold=30, perp_angle_thresh=20, verbo
         if depth in (1, 2):
 
             if verbose >= 2:
-                print '\t' * depth, 'point', idx, '- last angle', last_angle, '- perp angle', perp_angle
+                print('\t' * depth, 'point', idx, '- last angle', last_angle, '- perp angle', perp_angle)
 
             diff0 = np.abs(angles[idx] - perp_angle) <= perp_angle_thresh
             diff180_0 = np.abs(angles[idx] - (perp_angle + 180)) <= perp_angle_thresh
@@ -537,7 +543,7 @@ def get_best_fitting_rect_coords(xy, d_threshold=30, perp_angle_thresh=20, verbo
             diff_to_explore = np.nonzero(np.logical_and(all_diffs, distances[idx] > 0))[0]
 
             if verbose >= 2:
-                print '\t' * depth, 'diff0:', np.nonzero(diff0)[0], 'diff180:', np.nonzero(diff180)[0], 'diff_to_explore:', diff_to_explore
+                print('\t' * depth, 'diff0:', np.nonzero(diff0)[0], 'diff180:', np.nonzero(diff180)[0], 'diff_to_explore:', diff_to_explore)
 
             for dte_idx in diff_to_explore:
                 if dte_idx not in prev_points: # unlickly to happen but just to be certain
@@ -559,7 +565,7 @@ def get_best_fitting_rect_coords(xy, d_threshold=30, perp_angle_thresh=20, verbo
                 rect_points.append(idx)
                 
                 if verbose == 2:
-                    print 'We have a rectangle:', rect_points
+                    print('We have a rectangle:', rect_points)
 
                 already_present = False
                 for possible_rectangle in possible_rectangles:
@@ -571,15 +577,15 @@ def get_best_fitting_rect_coords(xy, d_threshold=30, perp_angle_thresh=20, verbo
                     possible_rectangles.append(rect_points)
 
     if verbose >= 2:
-        print 'Coords'
-        print xy
-        print
-        print 'Distances'
-        print distances
-        print
-        print 'Angles'
-        print angles
-        print
+        print('Coords')
+        print(xy)
+        print()
+        print('Distances')
+        print(distances)
+        print()
+        print('Angles')
+        print(angles)
+        print()
     
     for i in range(N):
         search_for_possible_rectangle(i)                 
