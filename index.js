@@ -18,10 +18,6 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-app.get('/', (req, res) => {
-    res.send("hi");
-})
-
 // require('./routes/auth.js')(app);
 
 if (process.env.NODE_ENV === "production") {
