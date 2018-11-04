@@ -29,19 +29,33 @@ def find_piece_locations(img, num_pieces):
     labels = skimage.measure.label(binary)
     props = skimage.measure.regionprops(labels)
 
-    regions = []
+    diameters = [region.equivalent_diameter for region in props]
+    sorted_diameters = np.sort(diameters)
+    perimeters = [region.perimeter for region in props]
+    sorted_perimeters = np.sort(perimeters)
 
-    regions = [region.equivalent_diameter for region in props]
-    sorted = np.sort(regions)
+    #arbitrarily choose the nth largest diameter as our characteristic puzzle diameter
+    puzzle_diam = sorted_diameters[-1 * num_pieces]
+    puzzle_perim = sorted_perimeters[-1 * num_pieces]
 
-    #arbitrarily choose the nth largest size as our characteristic puzzle size
-    puzzle_size = sorted[-1 * num_pieces//2]
-
-    piece_locations = []
+    diam_threshold = 1.1
+    perim_threshold = 3
 
     # only choose those regions that are between 50 to 200% of the puzzle_size we chose
-    for region in props:
-        if (puzzle_size / 1.1) <= region.equivalent_diameter <= (puzzle_size * 1.1):
-            piece_locations.append(region.bbox)
+
+    piece_locations = [region.bbox for region in props 
+            if (puzzle_diam / diam_threshold) <= region.equivalent_diameter <= (puzzle_diam * diam_threshold)
+            and (puzzle_perim / perim_threshold) <= region.perimeter <= (puzzle_perim * perim_threshold)]
+
+
+    # while len(piece_locations) != num_pieces:
+
+    #     piece_locations = [region.bbox for region in props 
+    #         if (puzzle_size / size_threshold) <= region.equivalent_diameter <= (puzzle_size * size_threshold)]
+
+    #     if len(piece_locations) > num_pieces:
+    #         size_threshold += 0.025
+    #     elif len(piece_locations) < num_pieces:
+    #         size_threshold -= 0.025       
 
     return piece_locations

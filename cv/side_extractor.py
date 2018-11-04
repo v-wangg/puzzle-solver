@@ -685,6 +685,9 @@ def process_piece(image, **kwargs):
         gray[labels != max_area_idx] = 0
         gray = 255 - gray
         gray = extract_piece(gray)
+
+        kernel_close = np.ones((8,8),np.uint8)
+        gray = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel_close)
         
         out_dict['extracted'] = gray.copy()
         
