@@ -29,11 +29,15 @@ def compute_minmax_xy(thresh):
     return [np.array([coords.min(), coords.max()]) for coords in idx_shape]
 
 
-def segment_piece(image, bin_threshold=128):
+def segment_piece(gray, bin_threshold=128):
     """
     Apply segmentation of the image by simple binarization
     """
-    return cv2.threshold(image, bin_threshold, 255, cv2.THRESH_BINARY)[1]
+    thresh = skimage.filters.threshold_otsu(gray)
+    binary = 255 * (gray > thresh)
+
+    return np.pad(binary, ((500, 500), (500, 500)), 'constant', constant_values = 255)
+    # return cv2.threshold(image, bin_threshold, 255, cv2.THRESH_BINARY)[1]
 
     
 def extract_piece(thresh):
@@ -733,9 +737,9 @@ def process_piece(image, **kwargs):
         side_images = create_side_images(class_image, inout, corners)
         out_dict['side_images'] = side_images
         
+        
     except Exception as e:
         out_dict['error'] = e
     
     finally:
         return out_dict
-            
