@@ -687,8 +687,9 @@ def process_piece(image, **kwargs):
         gray = extract_piece(gray)
 
         # closes holes
-        kernel_close = np.ones((9,9),np.uint8)
-        gray = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel_close)
+        kernel = np.ones((9,9),np.uint8)
+        gray = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel)
+        gray = cv2.morphologyEx(gray, cv2.MORPH_OPEN, kernel)
         
         out_dict['extracted'] = gray.copy()
         
