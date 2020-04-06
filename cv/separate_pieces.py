@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
 import skimage
+from skimage import filters
 
 def preprocess(img, num_pieces):
     
@@ -23,7 +24,7 @@ def find_piece_locations(img, num_pieces):
     # create threshold from grayscale then binarize
     gray = skimage.color.rgb2gray(img)
     # otsu seemed to be the most versatile but can change depending
-    thresh = skimage.filters.threshold_otsu(gray)
+    thresh = filters.threshold_otsu(gray)
     binary = 255 * (gray < thresh)
 
     # create regionprops and treat each collection of whitespace as an object

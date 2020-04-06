@@ -5,24 +5,29 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "nodemon index.js",
+    "server": "nodemon server.js",
     "client": "npm run start --prefix client",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm install --prefix client && npm run build --prefix client",
-    "start": "node index.js"
+    "ngrok": "./ngrok http 5000",
+    "jiggy-start": "nodemon index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "actions-on-google": "^2.4.1",
+    "apiai": "^4.0.3",
     "axios": "^0.18.0",
     "body-parser": "^1.18.3",
     "concurrently": "^4.0.1",
     "cors": "^2.8.4",
+    "dialogflow-fulfillment": "^0.6.1",
     "express": "^4.16.4",
     "lodash": "^4.17.11",
     "mongodb": "^3.1.8",
     "mongoose": "^5.3.9",
     "nodemon": "^1.18.5",
-    "passport": "^0.4.0"
+    "passport": "^0.4.0",
+    "request": "^2.88.0"
   }
 }
